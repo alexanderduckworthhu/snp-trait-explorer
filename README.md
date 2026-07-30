@@ -176,6 +176,7 @@ Ancestry share that session file.
 ## Repository map
 
 ```text
+REVERSE_ENGINEERING.txt   ← walk the app backward (builder guide)
 docs/CONCEPTS.md · docs/methods.md
 data/curated/trait_associations.csv
 sql/schema.sql · sql/seed_trait_associations.sql · sql/analysis/

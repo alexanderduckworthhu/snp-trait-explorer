@@ -1,0 +1,264 @@
+================================================================================
+SNP TRAIT EXPLORER: REVERSE ENGINEERING GUIDE
+================================================================================
+Purpose: Teach yourself how this portfolio project works by walking backward
+from the Streamlit pages to genotypes, SQL, and the ancestry model.
+Read with the code open side-by-side.
+
+Audience: You (the builder who needs the WHY). Not for hiring managers
+,  they get the README and docs/methods.md.
+
+Sibling projects: icu-mortality-vital-shap, where-needs-overlap,
+multilingual-rag-assistant, and others are SEPARATE folders under Portfolio/.
+Do not mix their pipelines, data, or apps. This guide never asks you to edit them.
+
+
+--------------------------------------------------------------------------------
+1. THE ONE IDEA (start here when lost)
+--------------------------------------------------------------------------------
+Question the whole app answers:
+
+  "Given a raw SNP genotype file, what plain-English, non-medical trait notes
+   and an honest ancestry sketch can we show using public 1000 Genomes chr22
+   context and curated GWAS Catalog associations?"
+
+If a feature does not improve educational interpretability, transparent scoring,
+population context, or honest limits (not medical advice), it does not belong.
+
+That filter stops scope creep (no disease-risk SNPs, no fake clinical confidence,
+no full-genome UI on a laptop demo, no "AI genetic counselor" chrome).
+
+
+--------------------------------------------------------------------------------
+2. DATA / CONTROL FLOW (follow arrows with your finger)
+--------------------------------------------------------------------------------
+
+  [PUBLIC] 1000 Genomes chr22 VCF + sample panel
+           scripts/download_data.sh → data/raw/ (gitignored, ~196 MB)
+                    │
+                    ▼
+              ingest.py --mode trait|full
+                    │  cyvcf2 → Postgres batches
+                    ▼
+         sql/schema.sql tables:
+           samples · variants · genotypes · trait_associations
+                    │
+                    ├─ sql/analysis/01…05_*.sql   (SQL practice / interview drills)
+                    ├─ ml/train_ancestry_classifier.py  (real 1000G dosages)
+                    └─ app.py (optional DATABASE_URL)
+
+  [CLOUD / DEMO, no Postgres]
+  data/curated/trait_associations.csv
+  data/sample/demo_genotypes.*
+  models/ancestry_clf.joblib          ← from ml/train_demo_model.py
+  models/feature_names.json
+  outputs/feature_importances.csv
+           │
+           ▼
+        app.py
+           · Explore ……… panel counts + AF charts (demo totals or SQL)
+           · Trait profile … upload → dosage → rule scores → grey cards
+           · Ancestry ……… same upload → RF proba + drivers
+           · Behind the numbers … methods / sources / limits / glossary
+
+
+Mental model:
+  REFERENCE = "public chr22 + curated non-medical associations"
+  DOSAGE    = "0/1/2 copies of the effect allele (not string genotypes)"
+  TRAIT     = "transparent score = dosage × {+1,−1,0}, never an ML trait model"
+  ANCESTRY  = "illustrative RF on 15 markers; consumer tests use 100k+"
+  DEMO      = "committed artifacts so Cloud never trains at runtime"
+  UI        = "thin Streamlit over parsers + charts + i18n"
+
+
+--------------------------------------------------------------------------------
+3. FILE MAP. WHAT EACH FILE OWNS
+--------------------------------------------------------------------------------
+
+constants.py
+  - Colors, demo panel counts, chart palettes, cache TTL
+  - Tip: change DEMO_PANEL_COUNTS and refresh Explore without a database
+
+app.py
+  - Page router: Explore | Trait profile | Ancestry | Behind the numbers
+  - Lazy-imports charts / sklearn so Cloud cold-start stays lighter
+  - load_ancestry_model() is @st.cache_resource over the committed joblib
+  - Default first page is methods (text-only) for faster first paint on Cloud
+
+src/parsers.py
+  - 23andMe-like .txt and rsid,genotype CSV → tidy genotype frame
+  - dosages_against_associations() maps genotypes → effect-allele dosage
+
+src/associations.py
+  - load_associations() from curated CSV (fallback when Postgres is absent)
+
+src/genotype_session.py
+  - One upload shared by Trait profile and Ancestry (session state)
+  - Sample-file CTA for demos without a personal kit export
+
+src/db.py
+  - Optional DATABASE_URL helpers; psycopg2 imported only when needed
+  - Cloud requirements intentionally omit psycopg2 (demo mode)
+
+src/charts.py
+  - Plotly builders: counts bar, choropleth map, MAF hist, AF bars,
+    ancestry probabilities, contribution bars
+  - Per–super-population colors; editable axis overlays disabled
+
+src/i18n.py + src/locales_methods.py
+  - EN/FR/DE/IT/PT/ES/AR/ZH/RU UI strings
+  - Methods/sources/limits/glossary blocks merge into COPY
+  - Tip: add a key in EN first, then locales_methods for long markdown
+
+src/styles.py
+  - Design tokens, motion, RTL direction CSS for Arabic
+  - apply_direction(lang) is CSS-only (no components.v1.html)
+
+ingest.py
+  - VCF → Postgres; --mode trait keeps curated rsIDs, full loads biallelic chr22
+  - Needs requirements-ingest.txt (cyvcf2, psycopg2, …)
+
+ml/trait_score.py
+  - score = dosage × effect_weight; WEIGHTS risk/protective/other
+  - WHY rules not ML: every number must be auditable in one sentence
+
+ml/train_demo_model.py
+  - Synthetic dosages with separated AF by super-population
+  - Writes models/ancestry_clf.joblib for Streamlit Cloud
+  - Small forest (n_estimators=40, max_depth=8) keeps the artifact lean
+
+ml/train_ancestry_classifier.py
+  - Real training path from Postgres dosages (after ingest)
+  - Replace demo metrics in README when this runs on 1000G
+
+ml/explain_model.py
+  - Local SHAP / importance helpers (shap not on Cloud requirements)
+
+sql/schema.sql · sql/seed_trait_associations.sql
+  - Normalised reference store + seed for the 15 associations
+
+sql/analysis/01…05_*.sql
+  - Allele frequencies, genotype distributions, trait summaries,
+    sample profiles, population similarity (CTEs / windows / corr)
+
+data/curated/trait_associations.csv
+  - Source of truth for the 15 non-medical chr22 pairs in demo mode
+
+docs/CONCEPTS.md
+  - SNP, allele, dosage, MAF, association wording (biology primer)
+
+docs/methods.md
+  - Long-form companion to the in-app Behind the numbers page
+
+models/ · outputs/
+  - Committed deploy artifacts; never train on Streamlit Cloud at runtime
+
+
+--------------------------------------------------------------------------------
+4. THE DOSAGE TABLE (decode the product)
+--------------------------------------------------------------------------------
+After parsing an upload against the curated table, conceptually:
+
+  rsid, trait_name, gene_symbol, effect_allele, effect_direction,
+  dosage (0/1/2), score (= dosage × weight), plain_english_description
+
+Join key: rsID. Never join on free-text trait names.
+
+Effect direction encodes higher / lower / unscored *measurement* association
+from GWAS Catalog style curation, not disease risk.
+
+Ancestry path reuses the same dosages as a 15-column feature matrix ordered
+by models/feature_names.json.
+
+
+--------------------------------------------------------------------------------
+5. WHY THE PAGES EXIST (product reverse-engineering)
+--------------------------------------------------------------------------------
+Explore ............. public context first (no personal file required)
+Trait profile ....... educational cards from one upload (neutral grey)
+Ancestry ............ probability sketch + top drivers (disclaimer heavy)
+Behind the numbers .. methods, sources, limits, glossary (trust layer)
+
+Shared upload: genotype_session keeps Trait + Ancestry on one file so users
+do not re-upload when they switch pages.
+
+
+--------------------------------------------------------------------------------
+6. REVERSE-ENGINEER DRILLS (do these once)
+--------------------------------------------------------------------------------
+A. Demo without Postgres
+   Unset DATABASE_URL. streamlit run app.py.
+   Confirm Explore still shows panel counts and Trait works on the sample file.
+
+B. Trace one rsID
+   Pick rs3761422 (or any card). Follow:
+   trait_associations.csv → parsers dosage → trait_score weight → card copy.
+   Say aloud: "one copy of the effect allele → score +1 (or −1)."
+
+C. Break medical temptation
+   Imagine adding a disease-risk SNP. Where would the README, CONCEPTS,
+   card colours, and disclaimers fight you? Keep that friction.
+
+D. Ancestry honesty test
+   Load the sample file, open Ancestry, read the disclaimer.
+   If it sounds like 23andMe, the copy failed, fix i18n, not the forest.
+
+E. SQL path (optional laptop)
+   download_data.sh → init_db.sh → ingest.py --mode trait →
+   psql -f sql/analysis/01_population_allele_frequencies.sql
+   Compare AF charts in Explore when DATABASE_URL is set.
+
+F. Cloud install trap
+   requirements.txt is Cloud-slim (no psycopg2/shap).
+   In Streamlit Cloud Settings → Advanced, set Python 3.12
+   (3.14 stalls wheel resolution).
+
+
+--------------------------------------------------------------------------------
+7. OVERTHINK TRAPS → CODE COUNTERMEASURES
+--------------------------------------------------------------------------------
+Trap: "Train a neural net for traits"
+Fix:  ml/trait_score.py is a three-line rule on purpose
+
+Trap: "Use all ~50k chr22 SNPs in the UI"
+Fix:  curated 15 for explainability; ingest --mode full is for SQL practice
+
+Trap: "Ship SHAP on Streamlit Cloud"
+Fix:  shap lives in requirements-ingest.txt; Cloud loads committed importances
+
+Trap: "Classic traits (earwax, bitter taste) for wow factor"
+Fix:  Those SNPs are not on chr22; curated list stays chromosome-aligned
+
+Trap: "Store uploads"
+Fix:  session-only genotype_session; production would need consent + retention
+
+
+--------------------------------------------------------------------------------
+8. EMPLOYER-FAVORABILITY LAYER (what hiring managers should see)
+--------------------------------------------------------------------------------
+[x] Clear educational (non-medical) framing on every results view
+[x] Transparent dosage scoring you can defend in one sentence
+[x] Postgres schema + SQL analytics for intermediate SQL signal
+[x] Committed demo model so clone/Cloud never trains at runtime
+[x] Nine-language UI + Behind the numbers methods page
+[x] Case-study README (problem → decisions → metrics → limits)
+[x] CONCEPTS.md + methods.md intellectual honesty
+[ ] Live Streamlit URL stable on Python 3.12 + 90-sec walkthrough
+
+
+--------------------------------------------------------------------------------
+9. SELF-CHECK BEFORE YOU CALL IT "DONE"
+--------------------------------------------------------------------------------
+[ ] streamlit run app.py works with no DATABASE_URL
+[ ] Sample genotype opens Trait profile + Ancestry without re-upload
+[ ] Cards stay grey; no red/green "good/bad" trait colours
+[ ] You can define SNP, dosage, MAF, and association without notes
+[ ] You can explain why 15 markers ≠ consumer ancestry in 20 seconds
+[ ] You can explain Postgres vs demo mode in 20 seconds
+[ ] README metrics match the committed demo model (or are labeled synthetic)
+[ ] Cloud app uses Python 3.12 and opens without a redacted import error
+
+
+================================================================================
+End of reverse-engineering guide. When stuck, re-read section 1, then section 2.
+================================================================================
