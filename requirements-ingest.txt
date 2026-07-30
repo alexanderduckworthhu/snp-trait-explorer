@@ -2,3 +2,7 @@
 -r requirements.txt
 cyvcf2>=0.30.0
 tqdm>=4.66.0
+
+# Local explainability only (not needed on Streamlit Cloud)
+shap>=0.44.0
+matplotlib>=3.8.0
