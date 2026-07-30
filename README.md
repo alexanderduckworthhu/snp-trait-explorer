@@ -13,6 +13,8 @@ Geneva and Basel digital-health roles.
 
 Biology primer: [`docs/CONCEPTS.md`](docs/CONCEPTS.md)
 
+**Streamlit Cloud tip:** in the app’s **Settings → Advanced**, set **Python 3.12**. The default 3.14 environment can stall resolving wheels.
+
 ---
 
 ## Why it exists
@@ -67,7 +69,7 @@ the trait layer share one chromosome.
 - Curated trait layer: **15** non-medical chr22 SNP–trait pairs from GWAS
   Catalog studies with discovery **N > 10,000**
 - Committed demo ancestry classifier (synthetic dosages for Streamlit Cloud):
-  **99.6%** test accuracy on a held-out 20% split (n=500); replace with real
+  **99.8%** test accuracy on a held-out 20% split (n=500); replace with real
   1000G metrics after ingest
 - Real 1000G ancestry accuracy target after training: **>90%** on stratified
   hold-out (allele-frequency structure separates continental labels)

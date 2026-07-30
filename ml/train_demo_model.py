@@ -84,7 +84,12 @@ def main() -> None:
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    clf = RandomForestClassifier(
+        n_estimators=40,
+        max_depth=8,
+        random_state=42,
+        n_jobs=1,
+    )
     clf.fit(X_train, y_train)
     pred = clf.predict(X_test)
     acc = accuracy_score(y_test, pred)

@@ -10,16 +10,12 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import joblib
 import pandas as pd
 import streamlit as st
-from sklearn.ensemble import RandomForestClassifier
 
 import constants as C
-from ml.trait_score import trait_scores_from_dosages
-from src import charts, styles
 from src.associations import load_associations
 from src.db import database_url, read_sql
 from src.genotype_session import clear_genotype, has_genotype, render_uploader
@@ -34,6 +30,10 @@ from src.i18n import (
     tf,
 )
 from src.parsers import dosages_against_associations
+from src import styles
+
+if TYPE_CHECKING:
+    from sklearn.ensemble import RandomForestClassifier
 
 ROOT = Path(__file__).resolve().parent
 MODELS_DIR = ROOT / "models"
@@ -52,11 +52,13 @@ st.set_page_config(
 
 
 @st.cache_resource
-def load_ancestry_model() -> tuple[RandomForestClassifier | None, dict[str, Any] | None]:
+def load_ancestry_model() -> tuple[Any | None, dict[str, Any] | None]:
     """Load the committed ancestry classifier and feature metadata from disk."""
     if not MODEL_PATH.exists() or not FEATURE_NAMES_PATH.exists():
         return None, None
     try:
+        import joblib
+
         classifier = joblib.load(MODEL_PATH)
         metadata = json.loads(FEATURE_NAMES_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -164,6 +166,8 @@ def _with_population_labels(frame: pd.DataFrame, lang: str) -> pd.DataFrame:
 
 def page_explore(lang: str) -> None:
     """Render the public-data exploration page."""
+    from src import charts
+
     st.header(t("page_explore", lang))
     st.caption(t("explore_intro", lang))
 
@@ -212,6 +216,8 @@ def page_explore(lang: str) -> None:
 
 def page_trait_profile(lang: str) -> None:
     """Render the educational trait profile for an uploaded genotype file."""
+    from ml.trait_score import trait_scores_from_dosages
+
     st.header(t("page_trait", lang))
     styles.notice(t("disclaimer_general", lang))
 
@@ -249,6 +255,8 @@ def page_trait_profile(lang: str) -> None:
 
 def page_ancestry(lang: str) -> None:
     """Render the ancestry estimate page for the shared genotype upload."""
+    from src import charts
+
     st.header(t("page_ancestry", lang))
     styles.notice(t("disclaimer_ancestry", lang))
     st.caption(t("ancestry_intro", lang))
@@ -396,7 +404,8 @@ def main() -> None:
     st.caption(t("snp_glossary", lang))
 
     if "nav_page_key" not in st.session_state:
-        st.session_state["nav_page_key"] = "explore"
+        # Methods is text-only so the first paint after a cold start is faster.
+        st.session_state["nav_page_key"] = "methods"
     page_keys = ("explore", "trait", "ancestry", "methods")
 
     nav_cols = st.columns(len(page_keys), gap="small")
