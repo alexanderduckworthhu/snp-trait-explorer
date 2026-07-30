@@ -5,6 +5,8 @@ Same language set and sidebar pattern as ICU Mortality and Where Needs Overlap.
 
 from __future__ import annotations
 
+from src.locales_methods import METHODS
+
 SUPPORTED_LANGS = ("en", "fr", "de", "it", "pt", "es", "ar", "zh", "ru")
 
 LANGUAGE_LABELS: dict[str, str] = {
@@ -26,7 +28,7 @@ COPY: dict[str, dict[str, str]] = {
     "en": {
         "lang": "Language",
         "sidebar_hint": "Switch language anytime. Everything on the page follows.",
-        "sidebar_guide": "Explore the public panel, then load one genotype file for Trait profile and Ancestry.",
+        "sidebar_guide": "Explore the public panel, then load one genotype file for Trait profile and Ancestry. Behind the numbers covers methods and limits.",
         "nav": "Pages",
         "page_explore": "Explore",
         "page_trait": "Trait profile",
@@ -929,6 +931,10 @@ COPY: dict[str, dict[str, str]] = {
         "snp_glossary": "SNP: распространённое различие ДНК в одну букву между людьми.",
     },
 }
+
+
+for _lang, _methods in METHODS.items():
+    COPY.setdefault(_lang, {}).update(_methods)
 
 
 def normalize_lang(lang: str | None) -> str:

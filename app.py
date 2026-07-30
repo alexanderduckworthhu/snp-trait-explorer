@@ -336,6 +336,25 @@ def page_ancestry(lang: str) -> None:
         )
 
 
+def page_methods(lang: str) -> None:
+    """Render methods, sources, glossary, and limits."""
+    st.header(t("page_methods", lang))
+    st.caption(t("about_intro", lang))
+    styles.notice(t("disclaimer_general", lang))
+
+    st.markdown(f"### {t('methods_heading', lang)}")
+    st.markdown(t("methods_md", lang))
+
+    st.markdown(f"### {t('sources_heading', lang)}")
+    st.markdown(t("sources_md", lang))
+
+    st.markdown(f"### {t('limits_heading', lang)}")
+    st.markdown(t("limits_md", lang))
+
+    with st.expander(t("glossary_heading", lang), expanded=False):
+        st.markdown(t("glossary_md", lang))
+
+
 def main() -> None:
     """Run the multi-page Streamlit application."""
     styles.inject()
@@ -378,7 +397,7 @@ def main() -> None:
 
     if "nav_page_key" not in st.session_state:
         st.session_state["nav_page_key"] = "explore"
-    page_keys = ("explore", "trait", "ancestry")
+    page_keys = ("explore", "trait", "ancestry", "methods")
 
     nav_cols = st.columns(len(page_keys), gap="small")
     for column, page_key in zip(nav_cols, page_keys):
@@ -400,8 +419,10 @@ def main() -> None:
         page_explore(lang)
     elif selected_key == "trait":
         page_trait_profile(lang)
-    else:
+    elif selected_key == "ancestry":
         page_ancestry(lang)
+    else:
+        page_methods(lang)
 
 
 if __name__ == "__main__":

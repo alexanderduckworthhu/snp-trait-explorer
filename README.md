@@ -174,14 +174,14 @@ Ancestry share that session file.
 ## Repository map
 
 ```text
-docs/CONCEPTS.md
+docs/CONCEPTS.md · docs/methods.md
 data/curated/trait_associations.csv
 sql/schema.sql · sql/seed_trait_associations.sql · sql/analysis/
 ingest.py
 ml/
 models/ · outputs/
 app.py · constants.py
-src/i18n.py · src/styles.py · src/charts.py · src/genotype_session.py
+src/i18n.py · src/locales_methods.py · src/styles.py · src/charts.py · src/genotype_session.py
 scripts/download_data.sh · scripts/init_db.sh
 .streamlit/config.toml
 ```
