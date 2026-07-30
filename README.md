@@ -1,8 +1,8 @@
 # SNP Trait Explorer
 
 An educational SQL + light-ML platform that turns raw SNP genotype files into
-plain-English, non-medical trait notes for data science candidates targeting
-Geneva and Basel digital-health roles.
+plain-English, non-medical trait notes for data science candidates building
+intermediate SQL skills on health-adjacent reference data.
 
 | | |
 |---|---|
@@ -36,7 +36,7 @@ the trait layer share one chromosome.
 
 - **PostgreSQL 15 for variants / samples / genotypes / associations**,
   considered Pandas-only notebooks and DuckDB; chose Postgres because the
-  interview skill target is intermediate SQL (CTEs, windows, `corr()`) and
+  skill target is intermediate SQL (CTEs, windows, `corr()`) for health-data teams, and
   normalised reference tables match how health-data teams keep audit-friendly
   stores. DuckDB remains the scale-up path for full-genome VCF without a server.
 - **Random Forest (`n_estimators=100`) for super-population labels**,
@@ -54,8 +54,8 @@ the trait layer share one chromosome.
   models**, considered per-trait regressors; a transparent rule is auditable
   in one sentence and avoids invented confidence from 15 markers.
 - **EN/FR/DE/IT/ZH/PT/RU UI strings in `src/i18n.py`**, same sidebar language
-  pattern as ICU Mortality and Where Needs Overlap, so French localization for
-  Geneva interviews is already wired.
+  pattern as ICU Mortality and Where Needs Overlap, so multilingual UI strings
+  are already wired.
 
 ---
 
