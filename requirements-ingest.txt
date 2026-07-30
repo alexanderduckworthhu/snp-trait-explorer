@@ -1,0 +1,4 @@
+# Full local pipeline: VCF download ingest into Postgres
+-r requirements.txt
+cyvcf2>=0.30.0
+tqdm>=4.66.0

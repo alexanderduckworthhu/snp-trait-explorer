@@ -1,0 +1,19 @@
+# SNP Trait Explorer — demo genotype file (23andMe-like)
+# Columns: rsid chromosome position genotype
+# Genotype = the two DNA letters at this SNP. Educational only — not a real kit export.
+# rsid	chromosome	position	genotype
+rs4253754	22	46219247	AG
+rs9616409	22	49026812	GG
+rs2294239	22	29053489	AA
+rs5998619	22	21591562	GA
+rs2283847	22	27785411	CT
+rs2845466	22	21892449	CC
+rs9608828	22	29977438	CC
+rs6519133	22	38700597	TT
+rs80584	22	36159746	CT
+rs2294915	22	43945024	CT
+rs2074735	22	31139886	GC
+rs3761422	22	24430704	TC
+rs5766576	22	45235512	AC
+rs28360615	22	28942668	GC
+rs2904552	22	18918451	CT

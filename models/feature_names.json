@@ -1,0 +1,28 @@
+{
+  "feature_names": [
+    "rs4253754",
+    "rs9616409",
+    "rs2294239",
+    "rs5998619",
+    "rs2283847",
+    "rs2845466",
+    "rs9608828",
+    "rs6519133",
+    "rs80584",
+    "rs2294915",
+    "rs2074735",
+    "rs3761422",
+    "rs5766576",
+    "rs28360615",
+    "rs2904552"
+  ],
+  "classes": [
+    "AFR",
+    "AMR",
+    "EAS",
+    "EUR",
+    "SAS"
+  ],
+  "trained_on": "synthetic_demo",
+  "note": "Replace by ml/train_ancestry_classifier.py after real ingest for portfolio metrics."
+}
