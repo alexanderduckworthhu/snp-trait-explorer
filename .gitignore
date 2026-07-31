@@ -16,3 +16,6 @@ dist/
 build/
 .streamlit/secrets.toml
 .agents/
+
+# Local reverse-engineering notes (not for public repos)
+REVERSE_ENGINEERING*
