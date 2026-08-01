@@ -6,6 +6,7 @@ intermediate SQL skills on health-adjacent reference data.
 
 | | |
 |---|---|
+| **Live app** | https://snp-trait-explorer.streamlit.app/ |
 | **Status** | Educational research demo. Not a medical device or genetic test. |
 | **Data** | 1000 Genomes Project phase 3 (chr22) + GWAS Catalog associations |
 | **Stack** | PostgreSQL 15 · Python · scikit-learn · Streamlit |
